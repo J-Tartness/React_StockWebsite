@@ -1,0 +1,49 @@
+#components-layout-demo-top-side .logo {
+  float: left;
+  width: 120px;
+  height: 31px;
+  margin: 16px 24px 16px 0;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.ant-row-rtl #components-layout-demo-top-side .logo {
+  float: right;
+  margin: 16px 0 16px 24px;
+}
+
+.site-layout-background {
+  background: #fff;
+  height: 100%;
+  padding: 24px 0;
+}
+
+.site-statistic-demo-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  width: 100%;
+  padding: 30px;
+  background: #ececec;
+}
+
+.stockInfo-container{
+  height: 100%;
+  display:flex;
+  justify-content: space-between;
+}
+
+.graph-container{
+  flex:1;
+  margin-top: 20px;
+}
+
+.title{
+  height: 50px;
+  text-align: center;
+  font-size: 28px;
+  line-height: 50px;
+  color: #fff;
+  background: #001529;
+  margin-bottom: 1px;
+}
