@@ -1,2 +1,3 @@
 import {http} from './http'
-export {http}
+import {useInterval} from './interval'
+export {http, useInterval}

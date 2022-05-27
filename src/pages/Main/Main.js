@@ -4,7 +4,7 @@ import {useNavigate} from 'react-router-dom'
 import { Button, Layout, Menu, List, Card, Col, Row, Statistic, Divider, Table, Tag } from 'antd';
 import { ArrowDownOutlined, ArrowUpOutlined } from '@ant-design/icons';
 import './Main.scss'
-import {http} from '../../utils';
+import {http ,useInterval} from '../../utils';
 
 const { Header, Sider, Content } = Layout;
 
@@ -53,29 +53,52 @@ const columns = [
   },
 ];
 
-let base = +new Date(
-  new Date().getFullYear(),
-  new Date().getMonth(),
-  new Date().getDate(),
-  12,
-  0,
-  0
-);
-let oneMin = 60 * 1000;
-
-let data = [[base, 0]];
-
-for (let i = 1; i <= 180; i++) {
-  let now = new Date((base += oneMin));
-  data.push([+now, Math.round((Math.random() - 0.5) * 20 + data[i - 1][1])]);
-}
-
 const Main = (props) => {
   const navigate = useNavigate();
+
+  const [stockDetail, setStockDetail] = useState({
+    id: -1,
+    stockId: 0,
+    stockCode: 0,
+    stockName: '',
+    startPrice: 0,
+    currPrice: 0,
+    maxPrice: 0,
+    minPrice: 0,
+  })
+
+  useInterval( async ()=>{
+    let r1 = await http.get('/getStockDetail/'+stockDetail.stockId);
+    setStockDetail({...r1.data});
+
+    let r2 = await http.get('/getStockTradeList/'+stockDetail.stockId)
+    let array = [];
+    let n = 1;
+    let v = 0;
+    let t = 0;
+    r2.data.map((item,index)=>{
+      v += parseInt(item.quantity);
+      t += parseInt(item.quantity)*parseFloat(item.price);
+      array.push(Object.assign(item,{key:n}));
+      n++;
+    });
+    setTransactions([...array]);
+    setVolume(v);
+    setTurnover(t);
+
+    let now = +new Date();
+    data.push([+now, r1.currPrice]);
+    setData([...data])
+  },stockDetail.stockId===-1?null:10000);
 
   async function getStockList(){
     const res = await http.get('/getStockList');
     setStocks([...res.data]);
+  }
+
+  async function getSuggestionStocks(){
+    const res = await http.get('/getSuggestionStocks');
+    setSuggestions([...res.data]);
   }
 
   async function getStockDetail(stockId){
@@ -97,27 +120,26 @@ const Main = (props) => {
     setVolume(v);
     setTurnover(t);
 
-    console.log(v);
-    console.log(t);
+    let base = +new Date();
+    let oneMin = 60 * 1000;
+    let tmp = [];
+    for (let i = 1; i <= 180; i++) {
+      tmp.push([+base,null]);
+      base += oneMin;
+    }
+    setData(tmp);
   }
+
+  const [data, setData] = useState([]);
 
   const [volume, setVolume] = useState(0);
 
   const [turnover, setTurnover] = useState(0);
 
-  const [stockDetail, setStockDetail] = useState({
-    id: -1,
-    stockId: 0,
-    stockCode: 0,
-    stockName: '',
-    startPrice: 0,
-    currPrice: 0,
-    maxPrice: 0,
-    minPrice: 0,
-  })
-
   const [stocks, setStocks] = useState([
   ]);
+
+  const [suggestions, setSuggestions] = useState([]);
 
   const [option, setOption] = useState({
     tooltip: {
@@ -161,6 +183,7 @@ const Main = (props) => {
 
   useEffect(()=>{
     getStockList();
+    getSuggestionStocks();
   },[])
 
   return (
@@ -196,18 +219,17 @@ const Main = (props) => {
                         onClick = {(e)=>getStockDetail(item.stockId)}
                       >
                         <List.Item.Meta
-                          title={item.stockName}
+                          title={item.stockName+' ('+item.stockCode+')'}
                         />
                       </Button>
                     </List.Item>
                   )}
                 />
 
-                <div>Suggestion Stock</div>
-
+                <div>Suggestion Stocks</div>
                 <List
                   itemLayout="horizontal"
-                  dataSource={stocks}
+                  dataSource={suggestions}
                   renderItem={item => (
                     <List.Item>
                       <Button type="text" block 
@@ -215,10 +237,16 @@ const Main = (props) => {
                           height: '100%',
                           textAlign: 'center'
                         }}
+
+                        onClick = {(e)=>getStockDetail(item.stockId)}
                       >
                         <List.Item.Meta
-                          title={item.title}
+                          title={item.stockName+' ('+item.stockCode+')'}
                         />
+                        <Tag icon={parseFloat(item.profit)>=0?<ArrowUpOutlined></ArrowUpOutlined>:<ArrowDownOutlined></ArrowDownOutlined>} 
+                          color={parseFloat(item.profit)>=0?'red':'green'}>
+                            {parseFloat(item.profit)*100}%
+                        </Tag>
                       </Button>
                     </List.Item>
                   )}
@@ -302,7 +330,7 @@ const Main = (props) => {
                         <Card size='small'>
                           <Statistic
                             title="Volume"
-                            value={{volume}}
+                            value={volume}
                             precision={2}
                             valueStyle={{
                               color: '#cf1322',
@@ -315,7 +343,7 @@ const Main = (props) => {
                         <Card size='small'>
                           <Statistic
                             title="Turnover"
-                            value={{turnover}}
+                            value={turnover}
                             precision={2}
                             valueStyle={{
                               color: '#cf1322',

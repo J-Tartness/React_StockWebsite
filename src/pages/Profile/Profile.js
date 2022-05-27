@@ -1,9 +1,9 @@
 import React ,{ useState,useEffect,useRef  } from 'react';
 import { message, Modal, Tag, Form, Input, Badge,Descriptions ,Avatar ,Button, Layout, Menu, Card, Statistic, Divider, Table } from 'antd';
-import { PlusOutlined, ArrowDownOutlined, ArrowUpOutlined } from '@ant-design/icons';
+import { ArrowDownOutlined, ArrowUpOutlined } from '@ant-design/icons';
 import './Profile.scss'
 import {useNavigate} from 'react-router-dom'
-import {http} from '../../utils';
+import {http ,useInterval} from '../../utils';
 
 const { Header, Sider, Content } = Layout;
 
@@ -14,9 +14,9 @@ const items1 = ['Main', 'Personal Infomation'].map((key) => ({
 
 const columns = [
     {
-      title: 'DealId',
-      dataIndex: 'id',
-      key: 'id',
+      title: 'Deal Id',
+      dataIndex: 'dealId',
+      key: 'dealId',
     },
     {
       title: 'Stock Id',
@@ -47,7 +47,7 @@ const columns = [
 
 const Profile = (props) => {
     const navigate = useNavigate();
-    const amountInput = useRef(null)
+    const amountInput = useRef(null);
 
     useEffect(()=>{
         getProfile();
@@ -63,6 +63,11 @@ const Profile = (props) => {
     async function getOperations(){
         let id = window.sessionStorage.getItem("userId"); 
         const res = await http.get('/getUserTradeList/'+id); 
+
+        res.data.map((item,index)=>{
+            
+        });
+
         setOperations([...res.data]);
     }
 
@@ -77,7 +82,7 @@ const Profile = (props) => {
 
         setConfirmLoading(true);
         setTimeout(() => {
-        message.info('Recharge is successed!');
+          message.info('Recharge is successed!');
           setVisible(false);
           setConfirmLoading(false);
         }, 1000);
@@ -100,6 +105,10 @@ const Profile = (props) => {
 
     const [operations, setOperations] = useState([]);
 
+    const [profit, setProfit] = useState(0);
+    const [assets, setAssets] = useState(0);
+    const [interestRate, setInterestRate] = useState(0.00);
+
     const onClickMenu = (e) => {
         navigate('/main');
     };
@@ -108,13 +117,17 @@ const Profile = (props) => {
         let id = window.sessionStorage.getItem('userId');
         const res = await http.post('/buyStock/'+id+'/'+values.stockId+'/'+values.quantity+'/'+values.price);
 
+        let cash = userProfile.cash - (parseInt(values.quantity)*parseFloat(values.price));
+        userProfile.cash = cash;
+        setUserProfile({...userProfile});
+
         let num = operations.length + 1;
         let dId = 0;
         if(operations.length===0){
             dId = 1;
         }
         else{
-            dId = operations[operations.length-1].id + 1;
+            dId = operations[operations.length-1].dealId + 1;
         }
         operations.push({
             key: num,
@@ -137,7 +150,7 @@ const Profile = (props) => {
             dId = 1;
         }
         else{
-            dId = operations[operations.length-1].id + 1;
+            dId = operations[operations.length-1].dealId + 1;
         }
         operations.push({
             key: num,
@@ -174,7 +187,7 @@ const Profile = (props) => {
                                 <Descriptions.Item label="UserName" span={3}>{userProfile.username}</Descriptions.Item>
                                 <Descriptions.Item label="Cash" span={3} >
                                     <div>{userProfile.cash}$</div>
-                                    <a href="#" onClick={showModal}> Recharge</a>
+                                    <a href="#" onClick={showModal}>Recharge</a>
                                     <Modal
                                         title="Recharge"
                                         visible={visible}
@@ -191,8 +204,8 @@ const Profile = (props) => {
                             </Descriptions>
                             <Card size='small' style={{ marginTop: '10px' }}>
                                 <Statistic
-                                    title="Total Investment"
-                                    value={10000}
+                                    title="Total Assets"
+                                    value={assets}
                                     precision={2}
                                     valueStyle={{
                                     color: '#cf1322',
@@ -203,13 +216,12 @@ const Profile = (props) => {
 
                             <Card size='small' style={{ marginTop: '10px' }}>
                                 <Statistic
-                                    title="Total Assets"
-                                    value={11000}
+                                    title="Profit"
+                                    value={profit}
                                     precision={2}
                                     valueStyle={{
-                                    color: '#3f8600',
+                                        color: profit>=0?'#cf1322':'#3f8600',
                                     }}
-                                    prefix={<ArrowUpOutlined />}
                                     suffix="$"
                                 />
                             </Card>
@@ -217,12 +229,12 @@ const Profile = (props) => {
                             <Card size='small' style={{ marginTop: '10px' }}>
                                 <Statistic
                                     title="Net Interest Rate"
-                                    value={10}
+                                    value={interestRate}
                                     precision={2}
                                     valueStyle={{
-                                    color: '#3f8600',
+                                        color: profit>=0?'#cf1322':'#3f8600',
                                     }}
-                                    prefix={<ArrowUpOutlined />}
+                                    prefix={profit>=0?<ArrowUpOutlined />:<ArrowDownOutlined />}
                                     suffix="%"
                                 />
                             </Card>
