@@ -62,22 +62,27 @@ const Main = (props) => {
   const navigate = useNavigate();
 
   async function getStockList(){
-
+    const res = await http.get('/getStockList');
+    setStocks([...res.data]);
   }
 
+  async function getStockDetail(stockId){
+    const res = await http.get('/getStockDetail/'+stockId);
+    setStockDetail({...res.data});
+  }
+
+  const [stockDetail, setStockDetail] = useState({
+    id: -1,
+    stockId: 0,
+    stockCode: 0,
+    stockName: '',
+    startPrice: 0,
+    currPrice: 0,
+    maxPrice: 0,
+    minPrice: 0,
+  })
+
   const [stocks, setStocks] = useState([
-    {
-      title: 'Tesla(204102)',
-    },
-    {
-      title: 'Apple(411232)',
-    },
-    {
-      title: 'Google(123682)',
-    },
-    {
-      title: 'Amazon(547872)',
-    }
   ]);
 
   const [option, setOption] = useState({
@@ -143,7 +148,7 @@ const Main = (props) => {
   };
 
   useEffect(()=>{
-    
+    getStockList();
   })
 
   return (
@@ -175,9 +180,11 @@ const Main = (props) => {
                           height: '100%',
                           textAlign: 'center'
                         }}
+
+                        onClick = {(e)=>getStockDetail(item.stockId)}
                       >
                         <List.Item.Meta
-                          title={item.title}
+                          title={item.stockName}
                         />
                       </Button>
                     </List.Item>
@@ -205,6 +212,14 @@ const Main = (props) => {
                   )}
                 />
               </Sider>
+
+              {stockDetail.id === -1?               
+              <Content
+                style={{
+                  height: '100%',
+                  padding: '0 24px',
+                }}
+              ></Content>:
               <Content
                 style={{
                   height: '100%',
@@ -311,6 +326,7 @@ const Main = (props) => {
                   
                 </div>
               </Content>
+              }
             </Layout>
           </Content>
       </Layout>

@@ -12,7 +12,7 @@ const Register = () => {
     async function onFinish (values){
         const res = await http.post('/register/'+values.username+'/'+values.password);
 
-        if(res.result==='Success'){
+        if(res.data.result==='Success'){
             navigate('/');
         }
         else{

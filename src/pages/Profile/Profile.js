@@ -1,4 +1,4 @@
-import React ,{ useState } from 'react';
+import React ,{ useState,useEffect } from 'react';
 import { Space, Tag, Form, Input, Badge,Descriptions ,Avatar ,Button, Layout, Menu, Card, Statistic, Divider, Table } from 'antd';
 import { ArrowDownOutlined, ArrowUpOutlined } from '@ant-design/icons';
 import './Profile.scss'
@@ -69,6 +69,23 @@ const columns = [
 
 const Profile = (props) => {
     const navigate = useNavigate();
+
+    useEffect(()=>{
+        getProfile();
+    });
+
+    async function getProfile(){
+        let id = window.sessionStorage.getItem("userId");  
+        const res = await http.post('/getProfile/'+id);
+        setUserProfile({...res.data});
+    }
+
+    const [userProfile, setUserProfile] = useState({
+        userId: '',
+        userName: '',
+        password: '',
+        cash: 0
+    });
 
     const [operations, setOperations] = useState([
         {
@@ -146,8 +163,8 @@ const Profile = (props) => {
                         <Sider className="site-layout-background" width={400}>
                             <Avatar style={{ backgroundColor: '#87d068' }} size={75}>USER</Avatar>
                             <Descriptions title="User Info" layout="vertical" bordered>
-                                <Descriptions.Item label="UserName" span={3}>Haoru Jiang</Descriptions.Item>
-                                <Descriptions.Item label="Cash" span={3}>2502.3$</Descriptions.Item>
+                                <Descriptions.Item label="UserName" span={3}>{userProfile.userName}</Descriptions.Item>
+                                <Descriptions.Item label="Cash" span={3}>{userProfile.cash}$</Descriptions.Item>
                                 <Descriptions.Item label="Status" span={3}>
                                     <Badge status="processing" text="Online" />
                                 </Descriptions.Item>
