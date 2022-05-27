@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Input, Button } from 'antd';
+import { Alert, Form, Input, Button } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import ParticlesBg from 'particles-bg'
 import {useNavigate} from 'react-router-dom'
@@ -10,12 +10,7 @@ const Register = () => {
     const navigate = useNavigate();
 
     async function onFinish (values){
-        const res = await http.post('/register',{
-            params:{
-                username: values.username,
-                password: values.password
-            }
-        });
+        const res = await http.post('/register/'+values.username+'/'+values.password);
 
         if(res.result==='Success'){
             navigate('/');

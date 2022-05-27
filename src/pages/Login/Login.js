@@ -9,12 +9,7 @@ const Login = () => {
     const navigate = useNavigate();
 
     async function onFinish (values) {
-        const res = await http.post('/login',{
-            params:{
-                username: values.username,
-                password: values.password
-            }
-        });
+        const res = await http.post('/login/'+values.username+'/'+values.password);
         if(res.result==='Success'){
             navigate('/main');
         }
