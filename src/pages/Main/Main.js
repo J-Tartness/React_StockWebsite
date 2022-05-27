@@ -68,27 +68,31 @@ const Main = (props) => {
   })
 
   useInterval( async ()=>{
-    let r1 = await http.get('/getStockDetail/'+stockDetail.stockId);
-    setStockDetail({...r1.data});
+    if(!(stockDetail.stockId===-1)){
+      let r1 = await http.get('/getStockDetail/'+stockDetail.stockId);
+      setStockDetail({...r1.data});
 
-    let r2 = await http.get('/getStockTradeList/'+stockDetail.stockId)
-    let array = [];
-    let n = 1;
-    let v = 0;
-    let t = 0;
-    r2.data.map((item,index)=>{
-      v += parseInt(item.quantity);
-      t += parseInt(item.quantity)*parseFloat(item.price);
-      array.push(Object.assign(item,{key:n}));
-      n++;
-    });
-    setTransactions([...array]);
-    setVolume(v);
-    setTurnover(t);
+      let r2 = await http.get('/getStockTradeList/'+stockDetail.stockId)
+      let array = [];
+      let n = 1;
+      let v = 0;
+      let t = 0;
+      r2.data.map((item,index)=>{
+        v += parseInt(item.quantity);
+        t += parseInt(item.quantity)*parseFloat(item.price);
+        array.push(Object.assign(item,{key:n}));
+        n++;
+      });
+      setTransactions([...array]);
+      setVolume(v);
+      setTurnover(t);
 
-    let now = +new Date();
-    data.push([+now, r1.currPrice]);
-    setData([...data])
+      let now = +new Date();
+      data.push([+now, r1.data.currPrice]);
+      setData([...data])
+      option.series[0].data = data;
+      setOption({...option});
+    }
   },stockDetail.stockId===-1?null:10000);
 
   async function getStockList(){
@@ -128,6 +132,8 @@ const Main = (props) => {
       base += oneMin;
     }
     setData(tmp);
+    option.series[0].data = data;
+    setOption({...option});
   }
 
   const [data, setData] = useState([]);
@@ -185,6 +191,10 @@ const Main = (props) => {
     getStockList();
     getSuggestionStocks();
   },[])
+
+  const getOption =()=>{
+    return option;
+  }
 
   return (
     <>
@@ -331,7 +341,6 @@ const Main = (props) => {
                           <Statistic
                             title="Volume"
                             value={volume}
-                            precision={2}
                             valueStyle={{
                               color: '#cf1322',
                             }}
@@ -355,7 +364,7 @@ const Main = (props) => {
                     </Row>
 
                     <div className="graph-container">
-                      <ReactECharts style={{height: '555px'}} option={option} />
+                      <ReactECharts style={{height: '555px'}} option={getOption()} />
                     </div>
                   </div>
 
