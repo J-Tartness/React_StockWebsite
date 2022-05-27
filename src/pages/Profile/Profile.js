@@ -1,6 +1,6 @@
-import React ,{ useState,useEffect } from 'react';
-import { Space, Tag, Form, Input, Badge,Descriptions ,Avatar ,Button, Layout, Menu, Card, Statistic, Divider, Table } from 'antd';
-import { ArrowDownOutlined, ArrowUpOutlined } from '@ant-design/icons';
+import React ,{ useState,useEffect,useRef  } from 'react';
+import { message, Modal, Tag, Form, Input, Badge,Descriptions ,Avatar ,Button, Layout, Menu, Card, Statistic, Divider, Table } from 'antd';
+import { PlusOutlined, ArrowDownOutlined, ArrowUpOutlined } from '@ant-design/icons';
 import './Profile.scss'
 import {useNavigate} from 'react-router-dom'
 import {http} from '../../utils';
@@ -14,24 +14,19 @@ const items1 = ['Main', 'Personal Infomation'].map((key) => ({
 
 const columns = [
     {
-      title: 'Time',
-      dataIndex: 'time',
-      key: 'time',
+      title: 'DealId',
+      dataIndex: 'dealId',
+      key: 'dealId',
     },
     {
-      title: 'Stock Name(Code)',
-      dataIndex: 'stock',
-      key: 'stock',
+      title: 'Stock Id',
+      dataIndex: 'stockId',
+      key: 'stockId',
     },
     {
-      title: 'Order Price',
-      dataIndex: 'orderPrice',
-      key: 'orderPrice',
-    },
-    {
-        title: 'Average Transaction Price',
-        dataIndex: 'averagePrice',
-        key: 'averagePrice',
+      title: 'Price',
+      dataIndex: 'price',
+      key: 'price',
     },
     {
         title: 'Quantity',
@@ -39,118 +34,119 @@ const columns = [
         key: 'quantity',
     },
     {
-      title: 'Type',
-      dataIndex: 'type',
-      key: 'type',
-      render: (_, { type }) => (
-          <Tag color={type==='Buy'?'red':'green'}>
-            {type.toUpperCase()}
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (_, { status }) => (
+          <Tag color={status==='Buy'?'red':'green'}>
+            {status.toUpperCase()}
           </Tag>
       ),
-    },
-    {
-        title: 'Status',
-        dataIndex: 'status',
-        key: 'status',
-    },
-    {
-        title: "Action",
-        key: "status",
-        render:(_, {status}) => {
-            if(status==='unComplete'||status==='partComplete'){
-                return (
-                <Space size="small">
-                    <a>Cancellation</a>
-                </Space>)
-            }
-        }
     }
 ];
 
 const Profile = (props) => {
     const navigate = useNavigate();
+    const amountInput = useRef(null)
 
     useEffect(()=>{
         getProfile();
-    });
+        getOperations();
+    },[]);
 
     async function getProfile(){
         let id = window.sessionStorage.getItem("userId");  
-        const res = await http.post('/getProfile/'+id);
+        const res = await http.get('/getProfile/'+id);
         setUserProfile({...res.data});
     }
 
+    async function getOperations(){
+        let id = window.sessionStorage.getItem("userId"); 
+        const res = await http.get('/getUserTradeList/'+id); 
+        setOperations([...res.data]);
+    }
+
+    const [visible, setVisible] = useState(false);
+    const [confirmLoading, setConfirmLoading] = useState(false);
+
+    async function handleOk () {
+        let id = window.sessionStorage.getItem("userId");  
+        const res = await http.post('/add_cash/'+id+'/'+amountInput.current.input.value);
+        userProfile.cash = userProfile.cash+amountInput.current.input.value;
+        setUserProfile({...userProfile});
+
+        setConfirmLoading(true);
+        setTimeout(() => {
+        message.info('Recharge is successed!');
+          setVisible(false);
+          setConfirmLoading(false);
+        }, 1000);
+    };
+
+    const showModal = () => {
+        setVisible(true);
+    };
+
+    const handleCancel = () => {
+        setVisible(false);
+    };
+
     const [userProfile, setUserProfile] = useState({
         userId: '',
-        userName: '',
+        username: '',
         password: '',
         cash: 0
     });
 
-    const [operations, setOperations] = useState([
-        {
-          key: 1,
-          time: '15:00:00',
-          stock: 600000,
-          orderPrice: 12.00,
-          averagePrice: 12.46,
-          quantity: 200,
-          type: 'Buy',
-          status: 'unComplete',
-        },
-        {
-            key: 2,
-            time: '15:00:00',
-            stock: 600000,
-            orderPrice: 12.00,
-            averagePrice: 12.46,
-            quantity: 200,
-            type: 'Buy',
-            status: 'unComplete',
-        },
-        {
-            key: 3,
-            time: '15:00:00',
-            stock: 600000,
-            orderPrice: 12.00,
-            averagePrice: 12.46,
-            quantity: 200,
-            type: 'Sell',
-            status: 'Complete',
-        },
-    ]);
+    const [operations, setOperations] = useState([]);
 
     const onClickMenu = (e) => {
         navigate('/main');
     };
 
-    const onBuyFinish = (values) =>{
+    async function onBuyFinish (values){
+        let id = window.localStorage.getItem('userId');
+        const res = await http.post('/buyStock/'+id+'/'+values.stockId+'/'+values.quantity+'/'+values.price);
+
+        let num = operations.length + 1;
+        let dId = operations[operations.length-1].dealId + 1;
         operations.push({
-            key: 4,
-            time: '15:00:00',
-            stock: 600000,
-            orderPrice: 12.00,
-            averagePrice: 12.46,
-            quantity: 200,
-            type: 'Buy',
-            status: 'unComplete',
+            key: num,
+            dealId: dId,
+            stockId: values.stockId,
+            price: values.price,
+            quantity: values.quantity,
+            status: 'Buy'
         })
         setOperations([...operations]);
     };
 
-    const onSellFinish = (values) =>{
+    async function onSellFinish (values) {
+        let id = window.localStorage.getItem('userId');
+        const res = await http.post('/sellStock/'+id+'/'+values.stockId+'/'+values.quantity+'/'+values.price);
 
+        let num = operations.length + 1;
+        let dId = operations[operations.length-1].dealId + 1;
+        operations.push({
+            key: num,
+            dealId: dId,
+            stockId: values.stockId,
+            price: values.price,
+            quantity: values.quantity,
+            status: 'Sale'
+        })
+        setOperations([...operations]);
     };
 
     return (
         <>
             <div className="title">
-            Stock Market
+                Stock Market
             </div>
   
             <Layout             
                 style={{
-                height: '80%'
+                height: '85%'
             }}>
                 <Header className="header">
                 <Menu theme="dark" mode="horizontal" onClick={onClickMenu} defaultSelectedKeys={['Personal Infomation']} items={items1} />
@@ -161,10 +157,22 @@ const Profile = (props) => {
                         className="site-layout-background"
                     >
                         <Sider className="site-layout-background" width={400}>
-                            <Avatar style={{ backgroundColor: '#87d068' }} size={75}>USER</Avatar>
+                            <Avatar style={{ backgroundColor: '#87d068' }} size={75}>{userProfile.username}</Avatar>
                             <Descriptions title="User Info" layout="vertical" bordered>
-                                <Descriptions.Item label="UserName" span={3}>{userProfile.userName}</Descriptions.Item>
-                                <Descriptions.Item label="Cash" span={3}>{userProfile.cash}$</Descriptions.Item>
+                                <Descriptions.Item label="UserName" span={3}>{userProfile.username}</Descriptions.Item>
+                                <Descriptions.Item label="Cash" span={3} >
+                                    <div>{userProfile.cash}$</div>
+                                    <a href="#" onClick={showModal}> Recharge</a>
+                                    <Modal
+                                        title="Recharge"
+                                        visible={visible}
+                                        onOk={handleOk}
+                                        confirmLoading={confirmLoading}
+                                        onCancel={handleCancel}
+                                    >
+                                        <p>Recharge amount:</p><Input type='number' ref={amountInput} placeholder="Please input number"></Input>
+                                    </Modal>
+                                </Descriptions.Item>
                                 <Descriptions.Item label="Status" span={3}>
                                     <Badge status="processing" text="Online" />
                                 </Descriptions.Item>
@@ -230,16 +238,16 @@ const Profile = (props) => {
                                     onFinish={onBuyFinish}
                                 >
                                     <Form.Item
-                                        label = "Stock Code"
-                                        name="stockCode"
+                                        label = "Stock Id"
+                                        name="stockId"
                                         rules={[
                                         {
                                             required: true,
-                                            message: 'Please input stock code!',
+                                            message: 'Please input stock id!',
                                         },
                                         ]}
                                     >
-                                        <Input placeholder="Stock Code" />
+                                        <Input placeholder="Stock Id" />
                                     </Form.Item>
                                     <Form.Item
                                         label = "Quantity"
@@ -273,7 +281,7 @@ const Profile = (props) => {
 
                                     <Form.Item>
                                         <Button type="primary" htmlType="submit" className="login-form-button">
-                                        Buy
+                                            Buy
                                         </Button>
                                     </Form.Item>
                                 </Form>
@@ -287,16 +295,16 @@ const Profile = (props) => {
                                     onFinish={onSellFinish}
                                 >
                                     <Form.Item
-                                        label = "Stock Code"
-                                        name="stockCode"
+                                        label = "Stock Id"
+                                        name="stockId"
                                         rules={[
                                         {
                                             required: true,
-                                            message: 'Please input stock code!',
+                                            message: 'Please input stock id!',
                                         },
                                         ]}
                                     >
-                                        <Input placeholder="Stock Code" />
+                                        <Input placeholder="Stock Id" />
                                     </Form.Item>
                                     <Form.Item
                                         label = "Quantity"
@@ -330,7 +338,7 @@ const Profile = (props) => {
 
                                     <Form.Item>
                                         <Button type="primary" htmlType="submit" className="login-form-button">
-                                        Sell
+                                            Sale
                                         </Button>
                                     </Form.Item>
                                 </Form>

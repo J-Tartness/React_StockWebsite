@@ -11,7 +11,7 @@ const Login = () => {
     async function onFinish (values) {
         const res = await http.post('/login/'+values.username+'/'+values.password);
         if(res.data.result==="Success"){
-            window.sessionStorage.setItem("userId", res.data.userId);
+            window.sessionStorage.setItem('userId', res.data.userId);
             navigate('/main');
         }
         else{

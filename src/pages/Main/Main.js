@@ -15,9 +15,9 @@ const items1 = ['Main', 'Personal Infomation'].map((key) => ({
 
 const columns = [
   {
-    title: 'Time',
-    dataIndex: 'time',
-    key: 'time',
+    title: 'UserId',
+    dataIndex: 'userId',
+    key: 'userId',
   },
   {
     title: 'Price',
@@ -30,14 +30,26 @@ const columns = [
     key: 'quantity',
   },
   {
-    title: 'Type',
-    key: 'type',
-    dataIndex: 'type',
-    render: (_, { type }) => (
-        <Tag color={type==='Buy'?'red':'green'}>
-          {type.toUpperCase()}
+    title: 'Status',
+    key: 'status',
+    dataIndex: 'status',
+    render: (_, { status }) => {
+      if(status==='BuySuccess'){    
+        <Tag color='red'>
+          BUY
         </Tag>
-    ),
+      }
+      else if(status==='SaleSuccess'){     
+        <Tag color='green'>
+          SALE
+        </Tag>
+      }
+      else{
+        <Tag color='default'>
+          UNDONE
+        </Tag>
+      }
+    },
   },
 ];
 
@@ -67,9 +79,28 @@ const Main = (props) => {
   }
 
   async function getStockDetail(stockId){
-    const res = await http.get('/getStockDetail/'+stockId);
-    setStockDetail({...res.data});
+    const request1 = await http.get('/getStockDetail/'+stockId);
+    setStockDetail({...request1.data});
+
+    const request2 = await http.get('/getStockTradeList'+stockId)
+    let array = [];
+    let n = 1;
+    let v = 0;
+    let t = 0;
+    request2.data.map((item,index)=>{
+      v += item.quantity;
+      t += item.quantity*item.price;
+      array.push(Object.assign(item,{key:n}));
+      n++;
+    });
+    setTransactions([...array]);
+    setVolume(v);
+    setTurnover(t);
   }
+
+  const [volume, setVolume] = useState(0);
+
+  const [turnover, setTurnover] = useState(0);
 
   const [stockDetail, setStockDetail] = useState({
     id: -1,
@@ -119,29 +150,7 @@ const Main = (props) => {
     ]
   });
 
-  const [transactions, setTransactions] = useState([
-    {
-      key: '1',
-      time: '15:00:00',
-      price: 32,
-      quantity: 102,
-      type: 'Buy',
-    },
-    {
-      key: '2',
-      time: '15:00:00',
-      price: 32,
-      quantity: 102,
-      type: 'Buy',
-    },
-    {
-      key: '3',
-      time: '15:00:00',
-      price: 32,
-      quantity: 102,
-      type: 'Sell',
-    },
-  ]);
+  const [transactions, setTransactions] = useState([]);
 
   const onClickMenu = (e) => {
     navigate('/profile');
@@ -149,7 +158,7 @@ const Main = (props) => {
 
   useEffect(()=>{
     getStockList();
-  })
+  },[])
 
   return (
     <>
@@ -226,15 +235,15 @@ const Main = (props) => {
                   padding: '0 24px',
                 }}
               >
-                <Divider style={{fontSize: '22px'}} orientation="center">Stock Name</Divider>
+                <Divider style={{fontSize: '22px'}} orientation="center">{stockDetail.stockName}</Divider>
                 <div className="stockInfo-container">
                   <div className="site-statistic-demo-card">
                     <Row gutter={12} justify="space-evenly">
                       <Col span={4}>
                         <Card size='small'>
                           <Statistic
-                            title="价格"
-                            value={11.28}
+                            title="Current Price"
+                            value={stockDetail.currPrice}
                             precision={2}
                             valueStyle={{
                               color: '#3f8600',
@@ -247,8 +256,8 @@ const Main = (props) => {
                       <Col span={4}>
                         <Card size='small'>
                           <Statistic
-                            title="开盘价"
-                            value={9.3}
+                            title="Start Price"
+                            value={stockDetail.startPrice}
                             precision={2}
                             valueStyle={{
                               color: '#cf1322',
@@ -261,8 +270,8 @@ const Main = (props) => {
                       <Col span={4}>
                         <Card size='small'>
                           <Statistic
-                            title="最高价"
-                            value={9.3}
+                            title="Max Price"
+                            value={stockDetail.maxPrice}
                             precision={2}
                             valueStyle={{
                               color: '#cf1322',
@@ -275,8 +284,8 @@ const Main = (props) => {
                       <Col span={4}>
                         <Card size='small'>
                           <Statistic
-                            title="最低价"
-                            value={9.3}
+                            title="Min Price"
+                            value={stockDetail.minPrice}
                             precision={2}
                             valueStyle={{
                               color: '#cf1322',
@@ -289,8 +298,8 @@ const Main = (props) => {
                       <Col span={4}>
                         <Card size='small'>
                           <Statistic
-                            title="成交量"
-                            value={9.3}
+                            title="Volume"
+                            value={{volume}}
                             precision={2}
                             valueStyle={{
                               color: '#cf1322',
@@ -302,8 +311,8 @@ const Main = (props) => {
                       <Col span={4}>
                         <Card size='small'>
                           <Statistic
-                            title="成交额"
-                            value={9.3}
+                            title="Turnover"
+                            value={{turnover}}
                             precision={2}
                             valueStyle={{
                               color: '#cf1322',
