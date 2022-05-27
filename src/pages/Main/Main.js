@@ -1,4 +1,4 @@
-import React ,{ useState, useEffect } from 'react';
+import React ,{ useState, useEffect, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import {useNavigate} from 'react-router-dom'
 import { Button, Layout, Menu, List, Card, Col, Row, Statistic, Divider, Table, Tag } from 'antd';
@@ -55,6 +55,7 @@ const columns = [
 
 const Main = (props) => {
   const navigate = useNavigate();
+  const echarts_line = useRef(null);
 
   const [stockDetail, setStockDetail] = useState({
     id: -1,
@@ -92,6 +93,7 @@ const Main = (props) => {
       setData([...data])
       option.series[0].data = data;
       setOption({...option});
+      echarts_line.current.setOption(option);
     }
   },stockDetail.stockId===-1?null:10000);
 
@@ -134,6 +136,7 @@ const Main = (props) => {
     setData(tmp);
     option.series[0].data = data;
     setOption({...option});
+    echarts_line.current.setOption(option);
   }
 
   const [data, setData] = useState([]);
@@ -191,10 +194,6 @@ const Main = (props) => {
     getStockList();
     getSuggestionStocks();
   },[])
-
-  const getOption =()=>{
-    return option;
-  }
 
   return (
     <>
@@ -364,7 +363,7 @@ const Main = (props) => {
                     </Row>
 
                     <div className="graph-container">
-                      <ReactECharts style={{height: '555px'}} option={getOption()} />
+                      <ReactECharts ref={echarts_line} style={{height: '555px'}} option={option} />
                     </div>
                   </div>
 
