@@ -82,20 +82,23 @@ const Main = (props) => {
     const request1 = await http.get('/getStockDetail/'+stockId);
     setStockDetail({...request1.data});
 
-    const request2 = await http.get('/getStockTradeList'+stockId)
+    const request2 = await http.get('/getStockTradeList/'+stockId)
     let array = [];
     let n = 1;
     let v = 0;
     let t = 0;
     request2.data.map((item,index)=>{
-      v += item.quantity;
-      t += item.quantity*item.price;
+      v += parseInt(item.quantity);
+      t += parseInt(item.quantity)*parseFloat(item.price);
       array.push(Object.assign(item,{key:n}));
       n++;
     });
     setTransactions([...array]);
     setVolume(v);
     setTurnover(t);
+
+    console.log(v);
+    console.log(t);
   }
 
   const [volume, setVolume] = useState(0);

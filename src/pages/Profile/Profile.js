@@ -15,8 +15,8 @@ const items1 = ['Main', 'Personal Infomation'].map((key) => ({
 const columns = [
     {
       title: 'DealId',
-      dataIndex: 'dealId',
-      key: 'dealId',
+      dataIndex: 'id',
+      key: 'id',
     },
     {
       title: 'Stock Id',
@@ -72,7 +72,7 @@ const Profile = (props) => {
     async function handleOk () {
         let id = window.sessionStorage.getItem("userId");  
         const res = await http.post('/add_cash/'+id+'/'+amountInput.current.input.value);
-        userProfile.cash = userProfile.cash+amountInput.current.input.value;
+        userProfile.cash = parseInt(userProfile.cash)+parseInt(amountInput.current.input.value);
         setUserProfile({...userProfile});
 
         setConfirmLoading(true);
@@ -105,11 +105,17 @@ const Profile = (props) => {
     };
 
     async function onBuyFinish (values){
-        let id = window.localStorage.getItem('userId');
+        let id = window.sessionStorage.getItem('userId');
         const res = await http.post('/buyStock/'+id+'/'+values.stockId+'/'+values.quantity+'/'+values.price);
 
         let num = operations.length + 1;
-        let dId = operations[operations.length-1].dealId + 1;
+        let dId = 0;
+        if(operations.length===0){
+            dId = 1;
+        }
+        else{
+            dId = operations[operations.length-1].id + 1;
+        }
         operations.push({
             key: num,
             dealId: dId,
@@ -122,18 +128,24 @@ const Profile = (props) => {
     };
 
     async function onSellFinish (values) {
-        let id = window.localStorage.getItem('userId');
-        const res = await http.post('/sellStock/'+id+'/'+values.stockId+'/'+values.quantity+'/'+values.price);
+        let id = window.sessionStorage.getItem('userId');
+        const res = await http.post('/saleStock/'+id+'/'+values.stockId+'/'+values.quantity+'/'+values.price);
 
         let num = operations.length + 1;
-        let dId = operations[operations.length-1].dealId + 1;
+        let dId = 0;
+        if(operations.length===0){
+            dId = 1;
+        }
+        else{
+            dId = operations[operations.length-1].id + 1;
+        }
         operations.push({
             key: num,
             dealId: dId,
             stockId: values.stockId,
             price: values.price,
             quantity: values.quantity,
-            status: 'Sale'
+            status: 'Sell'
         })
         setOperations([...operations]);
     };
@@ -146,7 +158,7 @@ const Profile = (props) => {
   
             <Layout             
                 style={{
-                height: '85%'
+                height: '90%'
             }}>
                 <Header className="header">
                 <Menu theme="dark" mode="horizontal" onClick={onClickMenu} defaultSelectedKeys={['Personal Infomation']} items={items1} />
@@ -338,7 +350,7 @@ const Profile = (props) => {
 
                                     <Form.Item>
                                         <Button type="primary" htmlType="submit" className="login-form-button">
-                                            Sale
+                                            Sell
                                         </Button>
                                     </Form.Item>
                                 </Form>
