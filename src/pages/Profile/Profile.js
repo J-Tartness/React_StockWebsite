@@ -54,7 +54,7 @@ const columns = [
               </Tag>)
         }
         else if(status==='Buy'){
-            return (          <Tag icon={<SyncOutlined spin />} color="processing">
+            return (          <Tag icon={<SyncOutlined spin />} color="purple">
                 BUY
               </Tag>)
         }
@@ -64,7 +64,7 @@ const columns = [
               </Tag>)
         }
         else{
-          return (          <Tag icon={<ClockCircleOutlined />} color="warning">
+          return (          <Tag icon={<ClockCircleOutlined />} color="cyan">
               SellPartSuccess
             </Tag>)
         }

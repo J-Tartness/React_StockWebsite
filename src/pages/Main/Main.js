@@ -95,7 +95,7 @@ const Main = (props) => {
       setOption({...option});
       echarts_line.current.getEchartsInstance().setOption(option);
     }
-  },stockDetail.stockId===-1||stockDetail.stockId===null?null:10000);
+  },stockDetail.stockId===-1||stockDetail.stockId===null?null:5000);
 
   async function getStockList(){
     const res = await http.get('/getStockList');
