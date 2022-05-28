@@ -1,6 +1,6 @@
 import React ,{ useState,useEffect,useRef  } from 'react';
 import { message, Modal, Tag, Form, Input, Badge,Descriptions ,Avatar ,Button, Layout, Menu, Card, Statistic, Divider, Table } from 'antd';
-import { ArrowDownOutlined, ArrowUpOutlined } from '@ant-design/icons';
+import { ClockCircleOutlined,SyncOutlined,CheckCircleOutlined,ArrowDownOutlined, ArrowUpOutlined } from '@ant-design/icons';
 import './Profile.scss'
 import {useNavigate} from 'react-router-dom'
 import {http ,useInterval} from '../../utils';
@@ -37,11 +37,38 @@ const columns = [
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (_, { status }) => (
-          <Tag color={status==='Buy'?'red':'green'}>
-            {status.toUpperCase()}
-          </Tag>
-      ),
+      render: (_, { status }) => {
+        if(status==='BuySuccess'){
+          return (          <Tag icon={<CheckCircleOutlined />} color="red">
+              BUY
+            </Tag>)
+        }
+        else if(status==='SaleSuccess'){
+          return (          <Tag icon={<CheckCircleOutlined />} color="success">
+              SELL
+            </Tag>)
+        }
+        else if(status==='Sale'){
+            return (          <Tag icon={<SyncOutlined spin />} color="processing">
+                SELL
+              </Tag>)
+        }
+        else if(status==='Buy'){
+            return (          <Tag icon={<SyncOutlined spin />} color="processing">
+                SELL
+              </Tag>)
+        }
+        else if(status==='BuyPartSuccess'){
+            return (          <Tag icon={<ClockCircleOutlined />} color="warning">
+                BuyPartSuccess
+              </Tag>)
+        }
+        else{
+          return (          <Tag icon={<ClockCircleOutlined />} color="warning">
+              SellPartSuccess
+            </Tag>)
+        }
+      },
     }
 ];
 
@@ -54,6 +81,10 @@ const Profile = (props) => {
         getOperations();
     },[]);
 
+    useInterval(()=>{
+        getOperations();
+    },60000);
+
     async function getProfile(){
         let id = window.sessionStorage.getItem("userId");  
         const res = await http.get('/getProfile/'+id);
@@ -62,13 +93,27 @@ const Profile = (props) => {
 
     async function getOperations(){
         let id = window.sessionStorage.getItem("userId"); 
-        const res = await http.get('/getUserTradeList/'+id); 
-
-        res.data.map((item,index)=>{
-            
-        });
-
+        const res = await http.get('/getUserTradeList/'+id);
         setOperations([...res.data]);
+
+        let a = 0;
+        let p = 0;
+
+        for(let i = 0;i<res.data.length;i++){
+            if(res.data[i].status==='SaleSuccess'){
+                continue;
+            }
+            if(res.data[i].status==='Buy'){
+                a+=res.data[i].quantity * res.data[i].price;
+                continue;
+            }
+            let cur = await http.get('/getStockDetail/'+res.data[i].stockId);
+            a+=res.data[i].quantity * cur.data.currPrice;
+            p+=res.data[i].quantity * (cur.data.currPrice-res.data[i].price);
+        }
+        setAssets(a);
+        setProfit(p);
+        setInterestRate((a/p).toFixed(4));
     }
 
     const [visible, setVisible] = useState(false);
@@ -158,7 +203,7 @@ const Profile = (props) => {
             stockId: values.stockId,
             price: values.price,
             quantity: values.quantity,
-            status: 'Sell'
+            status: 'Sale'
         })
         setOperations([...operations]);
     };

@@ -34,20 +34,20 @@ const columns = [
     key: 'status',
     dataIndex: 'status',
     render: (_, { status }) => {
-      if(status==='BuySuccess'){    
-        <Tag color='red'>
-          BUY
-        </Tag>
+      if(status==='BuySuccess'){
+        return (          <Tag color='red'>
+            BUY
+          </Tag>)
       }
-      else if(status==='SaleSuccess'){     
-        <Tag color='green'>
-          SALE
-        </Tag>
+      else if(status==='SaleSuccess'){
+        return (          <Tag color='green'>
+            SELL
+          </Tag>)
       }
       else{
-        <Tag color='default'>
-          UNDONE
-        </Tag>
+        return (          <Tag color='default'>
+            UNDONE
+          </Tag>)
       }
     },
   },
@@ -59,7 +59,7 @@ const Main = (props) => {
 
   const [stockDetail, setStockDetail] = useState({
     id: -1,
-    stockId: 0,
+    stockId: -1,
     stockCode: 0,
     stockName: '',
     startPrice: 0,
@@ -93,9 +93,9 @@ const Main = (props) => {
       setData([...data])
       option.series[0].data = data;
       setOption({...option});
-      echarts_line.current.setOption(option);
+      echarts_line.current.getEchartsInstance().setOption(option);
     }
-  },stockDetail.stockId===-1?null:10000);
+  },stockDetail.stockId===-1||stockDetail.stockId===null?null:10000);
 
   async function getStockList(){
     const res = await http.get('/getStockList');
@@ -129,14 +129,14 @@ const Main = (props) => {
     let base = +new Date();
     let oneMin = 60 * 1000;
     let tmp = [];
-    for (let i = 1; i <= 180; i++) {
+    for (let i = 1; i <= 15; i++) {
       tmp.push([+base,null]);
       base += oneMin;
     }
     setData(tmp);
     option.series[0].data = data;
     setOption({...option});
-    echarts_line.current.setOption(option);
+    echarts_line.current.getEchartsInstance().setOption(option);
   }
 
   const [data, setData] = useState([]);
@@ -213,7 +213,7 @@ const Main = (props) => {
               className="site-layout-background"
             >
               <Sider className="site-layout-background" width={200}>
-                <div>Stock List</div>
+                <div style={{fontFamily: 'Helvetica', fontSize: '18px', color: '#000099'}}>Stock List</div>
                 <List
                   itemLayout="horizontal"
                   dataSource={stocks}
@@ -235,7 +235,7 @@ const Main = (props) => {
                   )}
                 />
 
-                <div>Suggestion Stocks</div>
+                <div style={{marginTop: '20px', fontFamily: 'Helvetica', fontSize: '18px', color: '#000099'}}>Suggestion Stocks</div>
                 <List
                   itemLayout="horizontal"
                   dataSource={suggestions}
@@ -254,7 +254,7 @@ const Main = (props) => {
                         />
                         <Tag icon={parseFloat(item.profit)>=0?<ArrowUpOutlined></ArrowUpOutlined>:<ArrowDownOutlined></ArrowDownOutlined>} 
                           color={parseFloat(item.profit)>=0?'red':'green'}>
-                            {parseFloat(item.profit)*100}%
+                            {item.profit.toFixed(4)*100}%
                         </Tag>
                       </Button>
                     </List.Item>
@@ -262,7 +262,7 @@ const Main = (props) => {
                 />
               </Sider>
 
-              {stockDetail.id === -1?               
+              {stockDetail.id === -1 || stockDetail.stockId===null?               
               <Content
                 style={{
                   height: '100%',
@@ -275,7 +275,7 @@ const Main = (props) => {
                   padding: '0 24px',
                 }}
               >
-                <Divider style={{fontSize: '22px'}} orientation="center">{stockDetail.stockName}</Divider>
+                <Divider style={{fontSize: '22px'}} orientation="center">{stockDetail.stockName+' ('+stockDetail.stockCode+')'}</Divider>
                 <div className="stockInfo-container">
                   <div className="site-statistic-demo-card">
                     <Row gutter={12} justify="space-evenly">
@@ -286,9 +286,9 @@ const Main = (props) => {
                             value={stockDetail.currPrice}
                             precision={2}
                             valueStyle={{
-                              color: '#3f8600',
+                              color: stockDetail.currPrice>stockDetail.startPrice?'#cf1322':'#3f8600',
                             }}
-                            prefix={<ArrowUpOutlined />}
+                            prefix={stockDetail.currPrice>stockDetail.startPrice?<ArrowUpOutlined />:<ArrowDownOutlined />}
                             suffix="$"
                           />
                         </Card>
@@ -302,7 +302,6 @@ const Main = (props) => {
                             valueStyle={{
                               color: '#cf1322',
                             }}
-                            prefix={<ArrowDownOutlined />}
                             suffix="$"
                           />
                         </Card>
@@ -316,7 +315,6 @@ const Main = (props) => {
                             valueStyle={{
                               color: '#cf1322',
                             }}
-                            prefix={<ArrowDownOutlined />}
                             suffix="$"
                           />
                         </Card>
@@ -330,7 +328,6 @@ const Main = (props) => {
                             valueStyle={{
                               color: '#cf1322',
                             }}
-                            prefix={<ArrowDownOutlined />}
                             suffix="$"
                           />
                         </Card>
