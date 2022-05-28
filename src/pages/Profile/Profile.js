@@ -40,12 +40,12 @@ const columns = [
       render: (_, { status }) => {
         if(status==='BuySuccess'){
           return (          <Tag icon={<CheckCircleOutlined />} color="red">
-              BUY
+              BuySuccess
             </Tag>)
         }
         else if(status==='SaleSuccess'){
           return (          <Tag icon={<CheckCircleOutlined />} color="success">
-              SELL
+              SellSuccess
             </Tag>)
         }
         else if(status==='Sale'){
@@ -55,7 +55,7 @@ const columns = [
         }
         else if(status==='Buy'){
             return (          <Tag icon={<SyncOutlined spin />} color="processing">
-                SELL
+                BUY
               </Tag>)
         }
         else if(status==='BuyPartSuccess'){
