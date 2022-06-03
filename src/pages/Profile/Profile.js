@@ -15,8 +15,8 @@ const items1 = ['Main', 'Personal Infomation'].map((key) => ({
 const columns = [
     {
       title: 'Deal Id',
-      dataIndex: 'dealId',
-      key: 'dealId',
+      dataIndex: 'id',
+      key: 'id',
     },
     {
       title: 'Stock Id',
@@ -48,25 +48,15 @@ const columns = [
               SellSuccess
             </Tag>)
         }
-        else if(status==='Sale'){
+        else if(status==='Sale'||status==='SalePartSuccess'){
             return (          <Tag icon={<SyncOutlined spin />} color="processing">
-                SELL
+                SELLING
               </Tag>)
         }
-        else if(status==='Buy'){
+        else if(status==='Buy'||status==='BuyPartSuccess'){
             return (          <Tag icon={<SyncOutlined spin />} color="purple">
-                BUY
+                BUYING
               </Tag>)
-        }
-        else if(status==='BuyPartSuccess'){
-            return (          <Tag icon={<ClockCircleOutlined />} color="warning">
-                BuyPartSuccess
-              </Tag>)
-        }
-        else{
-          return (          <Tag icon={<ClockCircleOutlined />} color="cyan">
-              SellPartSuccess
-            </Tag>)
         }
       },
     }
@@ -82,8 +72,9 @@ const Profile = (props) => {
     },[]);
 
     useInterval(()=>{
+        getProfile();
         getOperations();
-    },60000);
+    },5000);
 
     async function getProfile(){
         let id = window.sessionStorage.getItem("userId");  
@@ -100,20 +91,29 @@ const Profile = (props) => {
         let p = 0;
 
         for(let i = 0;i<res.data.length;i++){
-            if(res.data[i].status==='SaleSuccess'){
-                continue;
-            }
             if(res.data[i].status==='Buy'){
                 a+=res.data[i].quantity * res.data[i].price;
                 continue;
             }
-            let cur = await http.get('/getStockDetail/'+res.data[i].stockId);
-            a+=res.data[i].quantity * cur.data.currPrice;
-            p+=res.data[i].quantity * (cur.data.currPrice-res.data[i].price);
+
+            if(res.data[i].status==='BuySuccess'){
+                let cur = await http.get('/getStockDetail/'+res.data[i].stockId);
+                a+=res.data[i].quantity * res.data[i].price;
+                //a+=res.data[i].quantity * res.data[i].price;
+                p+=res.data[i].quantity * cur.data.currPrice;
+                continue;
+            }
+
+            if(res.data[i].status==='SaleSuccess'){
+                a-=res.data[i].quantity * res.data[i].price;
+                //a+=res.data[i].quantity * res.data[i].price;
+                p-=res.data[i].quantity * res.data[i].price;
+                continue;
+            }
         }
         setAssets(a);
         setProfit(p);
-        setInterestRate((a/p).toFixed(4));
+        setInterestRate((p==0?0:((p-a)/a)).toFixed(4));
     }
 
     const [visible, setVisible] = useState(false);
@@ -152,7 +152,7 @@ const Profile = (props) => {
 
     const [profit, setProfit] = useState(0);
     const [assets, setAssets] = useState(0);
-    const [interestRate, setInterestRate] = useState(0.00);
+    const [interestRate, setInterestRate] = useState(0);
 
     const onClickMenu = (e) => {
         navigate('/main');
@@ -172,11 +172,11 @@ const Profile = (props) => {
             dId = 1;
         }
         else{
-            dId = operations[operations.length-1].dealId + 1;
+            dId = operations[operations.length-1].id + 1;
         }
         operations.push({
             key: num,
-            dealId: dId,
+            id: dId,
             stockId: values.stockId,
             price: values.price,
             quantity: values.quantity,
@@ -195,11 +195,11 @@ const Profile = (props) => {
             dId = 1;
         }
         else{
-            dId = operations[operations.length-1].dealId + 1;
+            dId = operations[operations.length-1].id + 1;
         }
         operations.push({
             key: num,
-            dealId: dId,
+            id: dId,
             stockId: values.stockId,
             price: values.price,
             quantity: values.quantity,
