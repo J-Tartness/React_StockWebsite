@@ -112,7 +112,7 @@ const Profile = (props) => {
             }
         }
         setAssets(a);
-        setProfit(p);
+        setProfit(p-a);
         setInterestRate((p==0?0:((p-a)/a)).toFixed(4));
     }
 
